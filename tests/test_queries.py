@@ -87,3 +87,19 @@ class TestQueries(object):
         res = json.loads(app.boulder_list(Request(q='circle[15.0, 15.0, 0.25]')))
         assert res['ok'], res['error']
         assert len(res['result']) == 2
+        assert 'problems' not in res['result'][0]
+        res = json.loads(app.boulder_list(Request(q='circle[15.0, 15.0, 0.25]',
+            problems="1")))
+        assert res['ok'], res['error']
+        assert len(res['result']) == 2
+        assert len(res['result'][0]['problems']) == 1
+
+    def test_boulder_selection_problems(self):
+        app = get_test_db()
+        res = json.loads(app.problem_add(Request(boulder="0", name="problem2",
+            description="foo", grade="6a")))
+        assert res['ok'], res['error']
+        res = json.loads(app.boulder_get(Request(), "0"))
+        assert res['ok'], res['error']
+        problems = res['result']['problems']
+        assert len(problems) == 2
