@@ -11,5 +11,5 @@ meta.reflect(bind=eng)
 
 if __name__ == '__main__':
     k = Klein()
-    get_klein(k, con)
-    k.run("0.0.0.0", 8088)
+    app = get_klein(k, con)
+    app.app.run("0.0.0.0", 8088)
