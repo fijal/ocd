@@ -1,5 +1,5 @@
 
-import json, re
+import json, re, time
 from sqlalchemy import select
 
 from ocd.model import boulder, problem
@@ -46,7 +46,7 @@ def get_klein(klein, connection):
         app = klein
         con = connection
 
-        @app.route('/boulder')
+        @app.route('/boulder/list')
         @verify(optional_args={'q': str,
                                'problems': bool})
         def boulder_list(self, request):
@@ -119,7 +119,7 @@ def get_klein(klein, connection):
                     return {'ok': False, 'error': 'unknown select query %s' % select_string}
             else:
                 selector = selector_always
-            for id, lattitude, longitude, elevation, name, sector in self.con.execute(select([boulder])):
+            for id, lattitude, longitude, elevation, name, sector, _ in self.con.execute(select([boulder])):
                 if not selector(lattitude, longitude, sector):
                     continue
                 res.append({
@@ -128,7 +128,7 @@ def get_klein(klein, connection):
                     'longitude': longitude,
                     'elevation': elevation,
                     'name': name,
-                    'sector': sector
+                    'sector': sector,
                     })
                 if give_problems:
                     p = []
@@ -165,7 +165,7 @@ def get_klein(klein, connection):
                 return {'ok': False, 'error': 'no record found for id %s' % id}
             probs = [{
                 'name': name, 'description': descr, 'grade': grade
-            } for _, name, descr, grade, _ in
+            } for _, name, descr, grade, _, _ in
                      self.con.execute(select([problem]).where(problem.c.boulder == id))]
             return {'ok': True, 'result': {
                'lattitude': lst[0][1],
@@ -207,7 +207,8 @@ def get_klein(klein, connection):
                 'longitude': float(request.args['longitude'][0]),
                 'elevation': int(request.args['elevation'][0]),
                 'name': request.args['name'][0],
-                'sector': int(request.args['sector'][0])
+                'sector': int(request.args['sector'][0]),
+                'timestamp': int(time.time())
                 }))
             return {'ok': True, 'boulder_id': res.inserted_primary_key[0]}
 
@@ -239,6 +240,7 @@ def get_klein(klein, connection):
                 'name': request.args['name'][0],
                 'description': request.args['description'][0],
                 'grade': request.args['grade'][0],
+                'timestamp': int(time.time())
                 }))
             return {'ok': True, 'problem_id': res.inserted_primary_key[0]}
 
